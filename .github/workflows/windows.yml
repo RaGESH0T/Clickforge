@@ -1,0 +1,48 @@
+name: Windows build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "PySide6==6.8.3" -e ".[dev]"
+      - name: Run tests
+        run: python -m pytest -q
+      - name: Build ClickForge.exe
+        run: |
+          python -m PyInstaller --noconfirm --clean --distpath packaging/dist-windows --workpath packaging/build-windows packaging/clickforge-windows.spec
+      - name: Build installer (NSIS)
+        run: |
+          choco install nsis -y --no-progress
+          makensis -V2 packaging/windows/installer.nsi
+      - name: Package release
+        run: |
+          New-Item -ItemType Directory -Force packaging/release | Out-Null
+          Compress-Archive -Path packaging/dist-windows/ClickForge.exe, README.md, LICENSE, packaging/windows/START-HERE.txt -DestinationPath packaging/release/ClickForge-0.1.0-windows-x86_64.zip -Force
+          $zipHash = (Get-FileHash packaging/release/ClickForge-0.1.0-windows-x86_64.zip -Algorithm SHA256).Hash.ToLower()
+          "$zipHash  ClickForge-0.1.0-windows-x86_64.zip" | Set-Content packaging/release/ClickForge-0.1.0-windows-x86_64.zip.sha256
+          $setupHash = (Get-FileHash packaging/release/ClickForge-0.1.0-windows-x86_64-setup.exe -Algorithm SHA256).Hash.ToLower()
+          "$setupHash  ClickForge-0.1.0-windows-x86_64-setup.exe" | Set-Content packaging/release/ClickForge-0.1.0-windows-x86_64-setup.exe.sha256
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClickForge-windows-x86_64
+          path: |
+            packaging/release/ClickForge-0.1.0-windows-x86_64-setup.exe
+            packaging/release/ClickForge-0.1.0-windows-x86_64-setup.exe.sha256
+            packaging/release/ClickForge-0.1.0-windows-x86_64.zip
+            packaging/release/ClickForge-0.1.0-windows-x86_64.zip.sha256
+          if-no-files-found: error

@@ -1,0 +1,24 @@
+ClickForge 0.1.0 - portable Linux package
+=========================================
+
+QUICK START (no install)
+------------------------
+1. Open this folder in your file manager.
+2. Run ClickForge (or use a terminal: ./ClickForge).
+3. Use "Pick on screen" or press F7 to choose a fixed click point.
+4. Press F6 to start/stop. Press Esc to stop immediately.
+
+Keep the _internal folder next to ClickForge. The app cannot run without it.
+
+OPTIONAL INSTALL
+----------------
+Run ./install.sh
+Then launch ClickForge from your application menu, or run: clickforge
+Remove it later with ./uninstall.sh
+
+REQUIREMENTS
+------------
+Linux with an X11 desktop session. Wayland does not allow the synthetic input
+and global emergency stop that ClickForge needs.
+
+See README.md for full instructions, safety limits and troubleshooting.
